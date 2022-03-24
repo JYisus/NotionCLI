@@ -9,7 +9,6 @@ import (
 	"github.com/jyisus/notioncli/cmd"
 	"github.com/jyisus/notioncli/internal/config"
 	"github.com/jyisus/notioncli/internal/notion"
-	"github.com/spf13/cobra"
 	"log"
 )
 
@@ -21,10 +20,7 @@ func main() {
 		fmt.Println(err)
 	}
 
-	var rootCmd = &cobra.Command{
-		Use:   "notioncli",
-		Short: "A brief description of your application",
-	}
+	var rootCmd = cmd.InitRootCommand()
 
 	if cfg != nil {
 		notionClient := notion.NewClient(*cfg)
@@ -33,6 +29,7 @@ func main() {
 		rootCmd.AddCommand(cmd.InitListCommand(notionClient))
 	}
 
+	rootCmd.AddCommand(cmd.InitTestCommand())
 	rootCmd.AddCommand(cmd.InitConfigCommand(configPath))
 
 	err = rootCmd.Execute()
