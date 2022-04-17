@@ -6,9 +6,17 @@ import (
 	"os"
 )
 
+type database struct {
+	Name string `yaml:"name"`
+	Id   string `yaml:"id"`
+	Key  string `yaml:"key"`
+}
+
 type Config struct {
-	DatabaseId   string `yaml:"DatabaseId"`
-	NotionApiKey string `yaml:"NotionApiKey"`
+	DatabaseId      string     `yaml:"DatabaseId"`
+	NotionApiKey    string     `yaml:"NotionApiKey"`
+	Databases       []database `yaml:"databases"`
+	DefaultDatabase string     `yaml:"defaultDatabase"`
 }
 
 func NewConfig(filePath string) (*Config, error) {
