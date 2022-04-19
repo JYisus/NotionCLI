@@ -28,6 +28,11 @@ type data struct {
 	} `json:"title"`
 }
 
+type task struct {
+	Text string
+	ID   string
+}
+
 func NewClient(cfg config.Config) Client {
 	client := notionapi.NewClient(notionapi.Token(cfg.NotionApiKey))
 	var databases []database
@@ -97,7 +102,16 @@ func (c Client) AddTask(databaseName, task string) error {
 	return nil
 }
 
-func (c Client) ListTasks(databaseName string) ([]string, error) {
+func (c Client) DeleteTask(task string) error {
+	_, err := c.client.Block.Delete(context.TODO(), notionapi.BlockID(task))
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Deleted block with ID %s\n", task)
+	return nil
+}
+
+func (c Client) ListTasks(databaseName string) ([]task, error) {
 	var database database
 	var err error
 	if databaseName == "default" {
@@ -125,7 +139,7 @@ func (c Client) ListTasks(databaseName string) ([]string, error) {
 		return nil, err
 	}
 
-	var tasks []string
+	var tasks []task
 	dt := data{}
 	for _, value := range res.Results {
 		st, err := json.Marshal(value.Properties[database.key])
@@ -136,10 +150,21 @@ func (c Client) ListTasks(databaseName string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
+		taskID := string(value.ID)
 		if len(dt.Title) == 0 {
-			tasks = append(tasks, "Untitled")
+			tasks = append(
+				tasks,
+				task{
+					Text: "Untitled",
+					ID:   taskID,
+				})
 		} else {
-			tasks = append(tasks, dt.Title[0].PlainText)
+			tasks = append(
+				tasks,
+				task{
+					Text: dt.Title[0].PlainText,
+					ID:   taskID,
+				})
 		}
 	}
 

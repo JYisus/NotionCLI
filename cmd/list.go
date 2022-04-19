@@ -23,7 +23,7 @@ func runList(notionclient notion.Client) CobraFn {
 	return func(cmd *cobra.Command, args []string) {
 		database, err := cmd.Flags().GetString("database")
 		if err != nil {
-			panic(err)
+			log.Fatalf("Error getting database arg: %s", err)
 		}
 
 		res, err := notionclient.ListTasks(database)
@@ -32,7 +32,7 @@ func runList(notionclient notion.Client) CobraFn {
 		}
 
 		for index, task := range res {
-			fmt.Printf("%d. %s\n", index+1, task)
+			fmt.Printf("%d. %s # %s\n", index+1, task.Text, task.ID)
 		}
 	}
 }

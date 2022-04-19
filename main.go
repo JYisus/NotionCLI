@@ -26,6 +26,7 @@ func main() {
 		notionClient := notion.NewClient(*cfg)
 
 		rootCmd.AddCommand(cmd.InitAddCommand(notionClient))
+		rootCmd.AddCommand(cmd.InitDeleteCommand(notionClient))
 		rootCmd.AddCommand(cmd.InitListCommand(notionClient))
 	}
 

@@ -5,7 +5,6 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
 	"github.com/jyisus/notioncli/internal/notion"
 	"log"
 
@@ -32,8 +31,7 @@ func runAdd(notionclient notion.Client) CobraFn {
 		var database string
 		database, err := cmd.Flags().GetString("database")
 		if err != nil {
-			fmt.Println("Using default database")
-			database = "default"
+			log.Fatalf("Error getting database arg: %s", err)
 		}
 		if len(cmd.Flags().Args()) < 1 {
 			log.Fatalln("You must introduce a task")
