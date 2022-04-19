@@ -16,9 +16,10 @@ type Client struct {
 }
 
 type database struct {
-	name string
-	id   notionapi.DatabaseID
-	key  string
+	name    string
+	id      notionapi.DatabaseID
+	key     string
+	request notionapi.DatabaseQueryRequest
 }
 
 type data struct {
@@ -32,10 +33,23 @@ func NewClient(cfg config.Config) Client {
 	var databases []database
 	var defaultDatabase database
 	for _, db := range cfg.Databases {
+		var request notionapi.DatabaseQueryRequest
+
+		if db.Filter != "" {
+			var filter notionapi.PropertyFilter
+			err := json.Unmarshal([]byte(db.Filter), &filter)
+			if err != nil {
+				fmt.Println(err)
+				return Client{}
+			}
+			request.PropertyFilter = &filter
+		}
+
 		newDatabase := database{
-			name: db.Name,
-			id:   notionapi.DatabaseID(db.Id),
-			key:  db.Key,
+			name:    db.Name,
+			id:      notionapi.DatabaseID(db.Id),
+			key:     db.Key,
+			request: request,
 		}
 		databases = append(databases, newDatabase)
 		if db.Name == cfg.DefaultDatabase {
@@ -51,20 +65,30 @@ func NewClient(cfg config.Config) Client {
 	}
 }
 
-func (c Client) AddTask(task string) error {
+func (c Client) AddTask(databaseName, task string) error {
+	var database database
+	var err error
+	if databaseName == "default" {
+		database = c.defaultDatabase
+	} else {
+		database, err = c.getDatabaseByName(databaseName)
+		if err != nil {
+			return err
+		}
+	}
 	request := &notionapi.PageCreateRequest{
 		Parent: notionapi.Parent{
-			DatabaseID: c.defaultDatabase.id,
+			DatabaseID: database.id,
 		},
 		Properties: notionapi.Properties{
-			"Name": notionapi.TitleProperty{
+			database.key: notionapi.TitleProperty{
 				Title: []notionapi.RichText{
 					{Text: notionapi.Text{Content: task}},
 				},
 			},
 		},
 	}
-	_, err := c.client.Page.Create(context.TODO(), request) //.Update(context.TODO(), notionapi.DatabaseID(databaseId), request)
+	_, err = c.client.Page.Create(context.TODO(), request) //.Update(context.TODO(), notionapi.DatabaseID(databaseId), request)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		return err
@@ -84,9 +108,18 @@ func (c Client) ListTasks(databaseName string) ([]string, error) {
 			return nil, err
 		}
 	}
-	request := &notionapi.DatabaseQueryRequest{}
 
-	res, err := c.client.Database.Query(context.TODO(), database.id, request)
+	//request := &notionapi.DatabaseQueryRequest{
+	//	PropertyFilter: &notionapi.PropertyFilter{
+	//		Property: "Done",
+	//		Checkbox: &notionapi.CheckboxFilterCondition{
+	//			//Equals:       false,
+	//			DoesNotEqual: true,
+	//		},
+	//	},
+	//}
+
+	res, err := c.client.Database.Query(context.TODO(), database.id, &database.request)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		return nil, err
@@ -95,7 +128,7 @@ func (c Client) ListTasks(databaseName string) ([]string, error) {
 	var tasks []string
 	dt := data{}
 	for _, value := range res.Results {
-		st, err := json.Marshal(value.Properties["Name"])
+		st, err := json.Marshal(value.Properties[database.key])
 		if err != nil {
 			return nil, err
 		}

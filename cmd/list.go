@@ -14,14 +14,19 @@ func InitListCommand(notionclient notion.Client) *cobra.Command {
 		Short: "List tasks on database",
 		Run:   runList(notionclient),
 	}
-	listCmd.Flags().StringP("task", "t", "", "task to add")
+	listCmd.Flags().StringP("database", "d", "default", "Notion Database ID")
 
 	return listCmd
 }
 
 func runList(notionclient notion.Client) CobraFn {
 	return func(cmd *cobra.Command, args []string) {
-		res, err := notionclient.ListTasks()
+		database, err := cmd.Flags().GetString("database")
+		if err != nil {
+			panic(err)
+		}
+
+		res, err := notionclient.ListTasks(database)
 		if err != nil {
 			log.Fatalf("Error adding task: %s", err)
 		}

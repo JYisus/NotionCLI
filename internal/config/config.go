@@ -7,9 +7,10 @@ import (
 )
 
 type database struct {
-	Name string `yaml:"name"`
-	Id   string `yaml:"id"`
-	Key  string `yaml:"key"`
+	Name   string `yaml:"name"`
+	Id     string `yaml:"id"`
+	Key    string `yaml:"key"`
+	Filter string `yaml:"filter" default:"{}"`
 }
 
 type Config struct {
