@@ -1,24 +1,20 @@
-/*
-Copyright © 2022 NAME HERE <EMAIL ADDRESS>
-
-*/
 package cmd
 
 import (
-	"github.com/jyisus/notioncli/internal/notion"
+	"github.com/jyisus/notioncli/usecase/task"
 	"log"
 
 	"github.com/spf13/cobra"
 )
 
-func InitDeleteCommand(notionclient notion.Client) *cobra.Command {
+func InitDeleteCommand(service task.Service) *cobra.Command {
 	deleteCmd := &cobra.Command{
 		Use:   "delete",
 		Short: "Delete a task to database",
 		Long: `Delete a task to database.
 
 To configure database and Notion API key run notioncli config`,
-		Run: runDelete(notionclient),
+		Run: runDelete(service),
 	}
 
 	deleteCmd.Flags().StringP("taskId", "t", "", "Notion Task ID")
@@ -26,13 +22,13 @@ To configure database and Notion API key run notioncli config`,
 	return deleteCmd
 }
 
-func runDelete(notionclient notion.Client) CobraFn {
+func runDelete(service task.Service) CobraFn {
 	return func(cmd *cobra.Command, args []string) {
 		taskId, err := cmd.Flags().GetString("taskId")
 		if err != nil {
 			log.Fatalf("Error getting task ID arg: %s", err)
 		}
-		err = notionclient.DeleteTask(taskId)
+		err = service.DeleteTask(taskId)
 		if err != nil {
 			log.Fatalf("Error adding task: %s", err)
 		}

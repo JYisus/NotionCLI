@@ -1,38 +1,33 @@
 package cmd
 
 import (
-	"fmt"
-	"github.com/jyisus/notioncli/internal/notion"
+	"github.com/jyisus/notioncli/usecase/task"
 	"log"
 
 	"github.com/spf13/cobra"
 )
 
-func InitListCommand(notionclient notion.Client) *cobra.Command {
+func InitListCommand(service task.Service) *cobra.Command {
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "List tasks on database",
-		Run:   runList(notionclient),
+		Short: "List task on database",
+		Run:   runList(service),
 	}
 	listCmd.Flags().StringP("database", "d", "default", "Notion Database ID")
 
 	return listCmd
 }
 
-func runList(notionclient notion.Client) CobraFn {
+func runList(service task.Service) CobraFn {
 	return func(cmd *cobra.Command, args []string) {
 		database, err := cmd.Flags().GetString("database")
 		if err != nil {
 			log.Fatalf("Error getting database arg: %s", err)
 		}
 
-		res, err := notionclient.ListTasks(database)
+		err = service.ListTasks(database)
 		if err != nil {
 			log.Fatalf("Error adding task: %s", err)
-		}
-
-		for index, task := range res {
-			fmt.Printf("%d. %s # %s\n", index+1, task.Text, task.ID)
 		}
 	}
 }

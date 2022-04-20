@@ -1,21 +1,18 @@
-/*
-Copyright © 2022 NAME HERE <EMAIL ADDRESS>
-
-*/
 package main
 
 import (
 	"fmt"
 	"github.com/jyisus/notioncli/cmd"
-	"github.com/jyisus/notioncli/internal/config"
-	"github.com/jyisus/notioncli/internal/notion"
+	"github.com/jyisus/notioncli/infrastructure/notion"
+	"github.com/jyisus/notioncli/usecase/config"
+	"github.com/jyisus/notioncli/usecase/task"
 	"log"
 )
 
 const configPath = "config.yaml"
 
 func main() {
-	cfg, err := config.NewConfig(configPath)
+	cfg, err := config.Load(configPath)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -23,14 +20,14 @@ func main() {
 	var rootCmd = cmd.InitRootCommand()
 
 	if cfg != nil {
-		notionClient := notion.NewClient(*cfg)
+		notionTaskRepository := notion.NewClient(*cfg)
+		taskService := task.NewService(*cfg, notionTaskRepository)
 
-		rootCmd.AddCommand(cmd.InitAddCommand(notionClient))
-		rootCmd.AddCommand(cmd.InitDeleteCommand(notionClient))
-		rootCmd.AddCommand(cmd.InitListCommand(notionClient))
+		rootCmd.AddCommand(cmd.InitAddCommand(taskService))
+		rootCmd.AddCommand(cmd.InitDeleteCommand(taskService))
+		rootCmd.AddCommand(cmd.InitListCommand(taskService))
 	}
 
-	rootCmd.AddCommand(cmd.InitTestCommand())
 	rootCmd.AddCommand(cmd.InitConfigCommand(configPath))
 
 	err = rootCmd.Execute()
