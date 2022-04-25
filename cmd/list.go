@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	writer "github.com/jyisus/notioncli/infrastructure/terminal_writer"
 	"github.com/jyisus/notioncli/usecase/task"
 	"log"
 
@@ -25,7 +26,9 @@ func runList(service task.Service) CobraFn {
 			log.Fatalf("Error getting database arg: %s", err)
 		}
 
-		err = service.ListTasks(database)
+		w := writer.NewTerminalWriter()
+
+		err = service.ListTasks(w, database)
 		if err != nil {
 			log.Fatalf("Error adding task: %s", err)
 		}

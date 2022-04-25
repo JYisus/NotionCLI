@@ -3,7 +3,6 @@ package task
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/jyisus/notioncli/entity"
 )
 
@@ -37,7 +36,7 @@ func (s Service) AddTask(databaseName, task string) error {
 	return s.taskRepository.AddTask(context.TODO(), database, task)
 }
 
-func (s Service) ListTasks(databaseName string) error {
+func (s Service) ListTasks(writer entity.Writer, databaseName string) error {
 	database, err := s.getDatabaseByName(databaseName)
 	if err != nil {
 		return err
@@ -48,9 +47,11 @@ func (s Service) ListTasks(databaseName string) error {
 		return err
 	}
 
-	for index, task := range tasks {
-		fmt.Printf("%d. %s # %s\n", index+1, task.Text, task.Id)
-	}
+	//for index, task := range tasks {
+	//	fmt.Printf("%d. %s # %s\n", index+1, task.Text, task.Id)
+	//}
+
+	writer.PrintTasks(tasks)
 
 	return nil
 }
